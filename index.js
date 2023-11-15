@@ -8,13 +8,16 @@ const swagger_ui = require('swagger-ui-express');
 const app = express();
 const port = 5000;
 
-const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record } = require('./modules/postgres.js');
+const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record , get_student_count} = require('./modules/postgres.js');
 const { authenticate } = require('./modules/authentication.js');
 
 
 
 
+
 app.get('/attendance', async (req, res) => {
+
+    console.log(req.url)
     const ID = req.query.ID;
     const Location = req.query.Location;
     const present = req.query.present;
@@ -23,13 +26,50 @@ app.get('/attendance', async (req, res) => {
 
     const result = await attendance_record(ID, Location, present);
     
-    if (result.rowCount === 1) {
-        res.status(200).send("Success");
+    if (result !== undefined) {
+        res.status(200).send({
+
+            "status": "Success",
+            "name": result
+        });
     } else {
         res.status(400).send("Failure");
     }
 });
 
+app.get('/register', async (req, res ) => {
+    const ID = req.query.ID;
+    const Name = req.query.Name;
+
+    const result = await write_student_data(ID, Name);
+
+    if (result.rowCount === 1) {
+        res.status(200).send({
+                
+                "status": "Success",
+                "name": result
+            
+        })
+    } else {
+        res.status(400).send("Failure");
+    }
+})
+
+app.get('/student_count', async (req, res) => {
+    const location = req.query.Location;
+
+    const result = await get_student_count(location);
+
+    if (result !== undefined) {
+        res.status(200).send({
+
+            "status": "Success",
+            "count": result
+        });
+    } else {
+        res.status(400).send("Failure");
+    }
+})
 
 
 app.listen(port, () => {

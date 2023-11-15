@@ -6,7 +6,7 @@ const swaggerstats = require('swagger-stats');
 const swagger_ui = require('swagger-ui-express');
 
 const app = express();
-const port = 3000;
+const port = 5000;
 
 const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record } = require('./modules/postgres.js');
 const { authenticate } = require('./modules/authentication.js');

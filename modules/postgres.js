@@ -2,28 +2,14 @@ const { Pool } = require('pg');
 
 // Configure the PostgreSQL connection
 const pool = new Pool({
-    user: 'admin',
-    host: 'node2.cyphersoftware.uk',
-    database: 'users',
-    password: 'q5qsRhshdj8f',
+    user: 'facial',
+    host: '45.87.28.51',
+    database: 'facial_recognition',
+    password: 'AVl2ZpOecNcJDQt',
     port: 5432, // Adjust the port if necessary
 });
 
-// Function to insert a new user into the database
-async function createUser(username, password) {
-    const query = {
-        text: 'INSERT INTO users (username, password) VALUES ($1, $2) RETURNING *',
-        values: [username, password],
-    };
 
-    const client = await pool.connect();
-    try {
-        const result = await client.query(query);
-        return result.rows[0];
-    } finally {
-        client.release();
-    }
-}
 
 // Function to retrieve all users from the database
 async function getAllUsers() {
@@ -38,9 +24,77 @@ async function getAllUsers() {
     }
 }
 
+async function write_student_data(ID, Name) {
+    const Fname = Name.split(" ")[0];
+    const Lname = Name.split(" ")[1];
+    var query = 'SELECT * FROM STUDENT_REG WHERE ID = $1';
+    var values = [ID];
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(query, values);
+        if (result.rowCount === 1) {
+            query = 'UPDATE STUDENT_REG SET Fname = $2, Lname = $3 WHERE ID = $1';
+            values = [ID, Fname, Lname];
+            const result = await client.query(query, values);
+            console.log('Updated')
+            return result;
+        } else {
+            query = 'INSERT INTO STUDENT_REG (ID, Fname, Lname) VALUES ($1, $2, $3)';
+            values = [ID, Fname, Lname];
+            const result = await client.query(query, values);
+            console.log('Inserted')
+            return result;
+        }
+    } finally {
+        client.release();
+    }
+
+}
+
+async function pull_all_reg_records() {
+    const query = 'SELECT * FROM STUDENT_REG';
+    const client = await pool.connect();
+    try {
+        const result = await client.query(query);
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
+
+async function attendance_record(ID, Location, present) {
+    var query = 'SELECT * FROM STUDENT_LOCATION WHERE ID = $1';
+    var values = [ID];
+
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(query, values);
+        if (result.rowCount === 1) {
+            query = 'UPDATE STUDENT_LOCATION SET Location = $2, present = $3 WHERE ID = $1';
+            values = [ID, Location, present];
+            const result = await client.query(query, values);
+            console.log('Updated')
+            return result;
+        } else {
+            query = 'INSERT INTO STUDENT_LOCATION (ID, Location, present) VALUES ($1, $2, $3)';
+            values = [ID, Location, present];
+            const result = await client.query(query, values);
+            console.log('Inserted')
+            return result;
+        }
+    } finally {
+        client.release();
+    }
+
+}
 
 module.exports = {
-    createUser,
     getAllUsers,
-};
+    pull_all_reg_records,
+    write_student_data,
+    attendance_record
 
+};

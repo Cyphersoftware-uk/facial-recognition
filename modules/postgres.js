@@ -113,6 +113,19 @@ async function get_student_count(location) {
     }
 }
 
+async function log_locations() {
+    const query = 'SELECT * FROM STUDENT_LOCATION';
+    const client = await pool.connect();
+
+    try {
+        const result = await client.query(query);
+        console.log(JSON.stringify(result.rows));
+        return result.rows;
+    } finally {
+        client.release();
+    }
+}
+
 async function get_student_name(ID) {
 
     console.log(ID)
@@ -136,6 +149,7 @@ module.exports = {
     pull_all_reg_records,
     write_student_data,
     attendance_record,
-    get_student_count
+    get_student_count,
+    log_locations
 
 };

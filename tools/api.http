@@ -1,0 +1,15 @@
+@host = http://localhost:5000
+
+
+@id = 7
+@Location = "Owen"
+@present = true
+
+## Create Attendances
+POST {{host}}/attendance?id={{id}}&Location={{Location}}&present={{present}}
+
+### Search Attendances
+GET {{host}}/search_attendance?studentName={{id}}
+
+
+

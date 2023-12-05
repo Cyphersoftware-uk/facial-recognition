@@ -1,31 +1,40 @@
 const express = require('express');
 const { join } = require('path');
+const cors = require('cors');
 
+const delay = async (ms) => {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 const swaggerstats = require('swagger-stats');
-const swagger_ui = require('swagger-ui-express');
+
+
+
 
 const app = express();
 const port = 5000;
 
-const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record, get_student_count, log_locations } = require('./modules/postgres.js');
+const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record, get_student_count, log_locations, search_data, name_to_id, get_student_name, register_admin } = require('./modules/postgres.js');
 const { authenticate } = require('./modules/authentication.js');
 
 
+app.use(cors());
+app.use(swaggerstats.getMiddleware({
+    uriPath: '/dev/stats',
+}));
+
+app.post('/attendance', async (req, res) => {
 
 
+    let ID = req.query.id
+    let Location = req.query.Location;
+    let present = req.query.present;
 
-app.get('/attendance', async (req, res) => {
-
-    console.log(req.url)
-    const ID = req.query.ID;
-    const Location = req.query.Location;
-    const present = req.query.present;
-
-    console.log(ID, Location, present);
+    console.log(`ID: ${ID}, Location: ${Location}, present: ${present}`)
+    
 
     const result = await attendance_record(ID, Location, present);
-    
+
     if (result !== undefined) {
         res.status(200).send({
 
@@ -41,17 +50,23 @@ app.get('/data', async (req, res) => {
     const result = await log_locations();
 
     if (result !== undefined) {
-        res.status(200).send({
+        res.status(200).jsonp({
 
             "status": "Success",
-            "name": result
+            "data": result
         });
     } else {
         res.status(400).send("Failure");
     }
 })
 
-app.get('/register', async (req, res ) => {
+app.get('/', (req, res) => {
+    res.json({
+        message: "Hello World"
+    })
+})
+
+app.post('/register', async (req, res) => {
     const ID = req.query.ID;
     const Name = req.query.Name;
 
@@ -59,10 +74,10 @@ app.get('/register', async (req, res ) => {
 
     if (result.rowCount === 1) {
         res.status(200).send({
-                
-                "status": "Success",
-                "name": result
-            
+
+            "status": "Success",
+            "name": result
+
         })
     } else {
         res.status(400).send("Failure");
@@ -80,6 +95,57 @@ app.get('/student_count', async (req, res) => {
             "status": "Success",
             "count": result
         });
+    } else {
+        res.status(400).send("Failure");
+    }
+})
+
+
+app.get('/search_attendance', async (req, res) => {
+
+    
+
+    let { studentName, Location, timePeriodStart, timePeriodEnd } = req.query;
+
+    console.log(`studentName: ${studentName}, Location: ${Location}, timePeriodStart: ${timePeriodStart}, timePeriodEnd: ${timePeriodEnd}`)
+
+    try {
+
+        if (Location !== undefined) {
+            Location = Location.toLowerCase();
+        } 
+        const result = await search_data(studentName, Location, timePeriodStart, timePeriodEnd);
+        if (res.status === 500) {
+            res.status(500).send("Failure");
+        } else {
+            res.status(200).send({
+                "status": result.status,
+                "data": result.data
+            });
+        } 
+    }
+    catch (error) {
+        console.log(error)
+    }
+});
+
+
+app.post('/Admin_Register', async (req, res) => {
+
+    console.log(req.url)
+    const Name = req.query.Username;
+    const Password = req.query.Password;
+
+    console.log(Name, Password)
+    const result = await register_admin(Name, Password);
+
+    if (result.status === 200) {
+        res.status(200).send({
+
+            "status": 200,
+            "name": result
+
+        })
     } else {
         res.status(400).send("Failure");
     }

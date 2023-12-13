@@ -1,6 +1,8 @@
 const express = require('express');
 const { join } = require('path');
 const cors = require('cors');
+const fs = require('fs');
+const exec = require('child_process').exec;
 
 const delay = async (ms) => {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -16,6 +18,7 @@ const port = 5000;
 
 const { getAllUsers, pull_all_reg_records, write_student_data, attendance_record, get_student_count, log_locations, search_data, name_to_id, get_student_name, register_admin } = require('./modules/postgres.js');
 const { authenticate } = require('./modules/authentication.js');
+const { execSync } = require('child_process');
 
 
 app.use(cors());
@@ -61,9 +64,10 @@ app.get('/data', async (req, res) => {
 })
 
 app.get('/', (req, res) => {
-    res.json({
-        message: "Hello World"
-    })
+    res.status(200).jsonp({
+        "status": 200,
+        "message": "This endpoint is not supported"
+    });
 })
 
 app.post('/register', async (req, res) => {
@@ -130,6 +134,7 @@ app.get('/search_attendance', async (req, res) => {
 });
 
 
+
 app.post('/Admin_Register', async (req, res) => {
 
     console.log(req.url)
@@ -152,6 +157,8 @@ app.post('/Admin_Register', async (req, res) => {
 })
 
 
-app.listen(port, () => {
-    console.log(`Example app listening at http://localhost:${port}`);
+app.listen(port, async() => {
+    const logo = fs.readFileSync(join(__dirname, 'data/assets/ascii_logo.txt'), 'utf8');
+    console.log(logo);
+    console.log(`Listening for Requests on 0.0.0.0:${port}`)
 });
